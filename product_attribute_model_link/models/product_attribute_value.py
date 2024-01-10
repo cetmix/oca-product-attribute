@@ -14,8 +14,8 @@ class ProductAttributeValue(models.Model):
 
     @api.model
     def _selection_target_model(self):
-        models = self.env["ir.model"].search([])
-        return [(model.model, model.name) for model in models]
+        models = self.env["ir.model"].search_read([], ["model", "name"])
+        return [(model["model"], model["name"]) for model in models]
 
     def convert_attribute_value(self, value, linked_field):
         """
@@ -43,7 +43,8 @@ class ProductAttributeValue(models.Model):
             product_attribute = self.env["product.attribute"].browse(attribute_id)
             # Create new record based on attribute value if create_from_attribute_values is True
             if (
-                product_attribute.create_from_attribute_values
+                product_attribute
+                and product_attribute.create_from_attribute_values
                 and not self.env.context.get("operation_from_record")
             ):
                 try:

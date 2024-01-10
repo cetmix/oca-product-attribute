@@ -17,7 +17,7 @@ class LinkedRecordWizard(models.TransientModel):
     def _select_target_model(self):
         if self.env.context.get("default_linked_model"):
             model_name = self.env.context.get("default_linked_model")
-            model = self.env["ir.model"].search([("model", "=", model_name)])
+            model = self.env["ir.model"]._get(model_name)
             return [(model_name, model.name)]
         else:
             return []

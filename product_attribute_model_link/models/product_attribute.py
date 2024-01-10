@@ -20,12 +20,12 @@ def make_create():
         product_attributes = self.env["product.attribute"].search(
             [("linked_model_id", "=", self._name)]
         )
+        # Call original method
+        records = create.origin(self, vals_list, **kw)
         if not product_attributes or self.env.context.get(
             "operation_from_attribute_value"
         ):
-            return create.origin(self, vals_list, **kw)
-        # Call original method
-        records = create.origin(self, vals_list, **kw)
+            return records
 
         for record in records:
             for product_attribute in product_attributes:
@@ -66,12 +66,14 @@ def make_write():
         product_attribute_values = self.env["product.attribute.value"].search(
             [("linked_record_ref", "=", f"{self._name},{self.id}")]
         )
+        # Call original method
+        write.origin(self, vals, **kw)
+
         if not (product_attribute_values and self) or self.env.context.get(
             "operation_from_attribute_value"
         ):
-            return write.origin(self, vals, **kw)
-        # Call original method
-        write.origin(self, vals, **kw)
+            return True
+
         # Modify linked product attribute value
         for product_attribute_value in product_attribute_values:
             product_attribute_value.with_context(operation_from_record=True).write(
