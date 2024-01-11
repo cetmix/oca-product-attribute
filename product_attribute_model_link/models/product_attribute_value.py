@@ -14,7 +14,9 @@ class ProductAttributeValue(models.Model):
 
     @api.model
     def _selection_target_model(self):
-        models = self.env["ir.model"].search_read([], ["model", "name"])
+        models = self.env["ir.model"].search_read(
+            [("transient", "=", False)], ["model", "name"]
+        )
         return [(model["model"], model["name"]) for model in models]
 
     def convert_attribute_value(self, value, linked_field):
@@ -39,7 +41,11 @@ class ProductAttributeValue(models.Model):
         :raise: ValidationError if conversion fails for a field.
         """
         for vals in vals_list:
-            attribute_id = vals.get("attribute_id")
+            attribute_id = (
+                vals.get("attribute_id")
+                if vals.get("attribute_id")
+                else self.env.context.get("default_attribute_id")
+            )
             product_attribute = self.env["product.attribute"].browse(attribute_id)
             # Create new record based on attribute value if create_from_attribute_values is True
             if (
