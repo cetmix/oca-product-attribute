@@ -136,6 +136,7 @@ class ProductAttribute(models.Model):
         "Cannot be a transient model. Warning: changing or removing "
         "existing value will not affect existing attribute values!",
     )
+    res_model_name = fields.Char(string="Model", related="linked_model_id.model")
     linked_field_id = fields.Many2one(
         "ir.model.fields",
         "Linked field",
@@ -152,6 +153,7 @@ class ProductAttribute(models.Model):
         help="If configured only records matching the domain will be used "
         "for attribute value creation. "
         "Warning: updating domain will not affect existing attribute values!",
+        default="[]",
     )
     apply_to_products_on_create = fields.Boolean(
         help="If enabled when a new attribute value is created "
@@ -182,18 +184,6 @@ class ProductAttribute(models.Model):
         "Use with extreme care! This option is available only "
         "if 'Create from Attribute Values' option is enabled."
     )
-
-    @api.onchange("linked_model_id", "linked_field_id")
-    def _onchange_linked_model_or_field_id(self):
-        return {
-            "warning": {
-                "title": _("Warning"),
-                "message": _(
-                    "Changing or removing existing value will "
-                    "not affect existing attribute values!"
-                ),
-            },
-        }
 
     @api.onchange("domain")
     def _onchange_domain(self):
@@ -337,3 +327,27 @@ class ProductAttribute(models.Model):
                     _logger.warning(
                         "AttributeError occurred while removing patch: %s", e
                     )
+
+    def add_attribute_value_from_linked_record(self):
+        """
+        Action to open a wizard for the linked record.
+
+        :return: Action dictionary to open the wizard.
+        """
+        context = {
+            "default_linked_model": self.linked_model_id.model
+            if self.linked_model_id
+            else False,
+            "create_attribute_value": True,
+        }
+        return {
+            "name": "Linked Record Wizard",
+            "view_mode": "form",
+            "res_model": "linked.record.wizard",
+            "view_id": self.env.ref(
+                "product_attribute_model_link.view_linked_record_wizard_form"
+            ).id,
+            "type": "ir.actions.act_window",
+            "target": "new",
+            "context": context,
+        }

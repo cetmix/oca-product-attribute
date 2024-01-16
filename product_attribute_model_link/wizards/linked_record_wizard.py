@@ -26,14 +26,29 @@ class LinkedRecordWizard(models.TransientModel):
         """
         Action to save the linked record
         """
-        product_attribute_value = self.env["product.attribute.value"].browse(
-            self._context.get("active_id")
-        )
-        product_attribute_value.write(
-            {
-                "linked_record_ref": self.linked_record_ref,
-                "name": self.linked_record_ref[
-                    product_attribute_value.attribute_id.linked_field_id.name
-                ],
-            }
-        )
+        if self.env.context.get("create_attribute_value"):
+            product_attribute = self.env["product.attribute"].browse(
+                self._context.get("active_id")
+            )
+            record_ref = self.linked_record_ref
+            self.env["product.attribute.value"].create(
+                [
+                    {
+                        "linked_record_ref": f"{record_ref._name},{record_ref.id}",
+                        "name": record_ref[product_attribute.linked_field_id.name],
+                        "attribute_id": product_attribute.id,
+                    }
+                ]
+            )
+        else:
+            product_attribute_value = self.env["product.attribute.value"].browse(
+                self._context.get("active_id")
+            )
+            product_attribute_value.write(
+                {
+                    "linked_record_ref": self.linked_record_ref,
+                    "name": self.linked_record_ref[
+                        product_attribute_value.attribute_id.linked_field_id.name
+                    ],
+                }
+            )
