@@ -27,9 +27,8 @@ def make_create():
         ):
             return records
 
-        for record in records:
-            for product_attribute in product_attributes:
-                matching_domain_record = product_attribute._filter_domain(record)
+        for product_attribute in product_attributes:
+            for matching_domain_record in product_attribute._filter_domain(records)
                 if matching_domain_record:
                     related_record = record[product_attribute.linked_field_id.name]
                     # Attempt conversion for digital field
